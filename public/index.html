@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Watch Live</title>
+    <link rel="shortcut icon" type="image/x-icon" href="assets/cricket.png" />
+    <link rel="stylesheet" href="./assets/styles.css">
+    <script src="./js/index.js"></script>
+</head>
+
+<body>
+    <div class="lds-dual-ring" id="spinner"></div>
+    <div class="container">
+        <div class="flex flex-column searchbox">
+            <input type="text" placeholder="Search for an event" id="keyword" autofocus required autocomplete="off">
+            <span id="errormsg" style="color: red">No results.. Please read the searching tips</span>
+        </div>
+        <div id="downloadInstructions" class="flex flex-column stream-instruction">
+            <h2>How to stream?</h2>
+            <div class="flex flex-column instructions">
+                <h4>1. Download this file and play with VLC media player. <a target="#" href="https://www.videolan.org/vlc/">(Get VLC)</a></h4>
+                <button>Download File</button>
+            </div>
+            <div class="flex flex-column instructions">
+                <h3>OR</h3>
+            </div>
+            <div class="flex flex-column instructions">
+                <h4> <span>2. Copy the url in the textbox and play it with VLC media player.
+                        <a href="https://wiki.videolan.org/Documentation:Streaming_HowTo_New/#Streaming"
+                            target="#">How?</a>
+                    </span></h4>
+                <textarea readonly spellcheck="false" id="stream-url"></textarea>
+            </div>
+        </div>
+        <div id="searchtips" class="flex flex-column">
+            <h3>Searching tips:</h3>
+            <ul>
+                <li><span>Make sure to search while the <b>match is live</b></span></li>
+                <li>
+                    <span>Describe your event in <b>less</b> than 20 letters</span>
+                </li>
+                <li>
+                    <span>Just use some keywords to best describe your match in <b>1-2 words</b></span>
+                </li>
+                <li>
+                    <span>For eg: to search for a cricket match between India and Pakistan, search for
+                        <b>"India Pakistan"</b>
+                    </span>
+                </li>
+                <li>
+                    <span>more eg: to watch a match between Roger Federer and Rafael Nadal, search for
+                        <b>"Federer Nadal"</b> or
+                        <b>"Nadal Federer"</b>
+                    </span>
+                </li>
+                <li>
+                    <span>You <b>might not</b> get any result if you search for
+                        <i>"Roger Rafael"</i>. Use their <b>last name</b></span>
+                </li>
+                <li>
+                    <span><b>Do not</b> over elaborate. eg: <i>"ICC cricket world cup India vs Pakistan"</i></span>
+                </li>
+                <li>
+                    <span>There is <b>no need</b> of using event's name, eg <i>ICC Cricket world cup, Roland Garros</i>
+                        etc.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
