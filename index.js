@@ -6,6 +6,8 @@ const express = require("express")
 const yargs = require("yargs")
 const _ = require("lodash")
 
+const filesDirectoryPath = path.resolve(__dirname, "public/files")
+
 const fileAppendAsync = promisify(fs.appendFile)
 
 const { getMatchUrl } = require("./utils/sports")
@@ -39,7 +41,7 @@ app.post("/stream-url", async (req, res) => {
         })
     }
 
-    const fileName = path.resolve(__dirname, "public/files", req.uniqueId) + ".m3u"
+    const fileName = `${filesDirectoryPath}/${req.uniqueId}.m3u`
     const result = {
         url,
         fileId: req.uniqueId,
@@ -71,10 +73,11 @@ app.get("/stream-file/:fileId", (req, res, next) => {
         return res.status(400).send("fileId is missing")
     }
 
-    const fileName = path.resolve(__dirname, "public/files/", req.params.fileId) + ".m3u"
-
+    const fileName = `${filesDirectoryPath}/${req.params.fileId}.m3u`
+    console.log(fileName);
     res.sendFile(fileName, (err) => {
         if(err) {
+            console.log(err);
             return res.status(400).send("No such file exists")
         }
     })
@@ -84,6 +87,21 @@ app.get("/stream-file/:fileId", (req, res, next) => {
     }, 60*60*1000, fileName)
 })
 
+//removing all files on app start
+fs.readdir(filesDirectoryPath, (err, files) => {
+    const removeFile = promisify(fs.unlink)
+    if (err) {
+        return console.log(err);
+    }
+
+    const removedFiles = files.map(file => removeFile(path.resolve(filesDirectoryPath, file)))
+    removedFiles.forEach(async file => {
+        await file
+    });
+})
+
+//command to run in terminal
+// watch-live --keyword="..." 
 yargs.command({
     command: "watch-live",
     describe: "watch a live event",
