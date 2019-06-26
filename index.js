@@ -6,7 +6,6 @@ const express = require("express")
 const yargs = require("yargs")
 const _ = require("lodash")
 
-const filesDirectoryPath = path.resolve(__dirname, "./public/files")
 
 const fileAppendAsync = promisify(fs.appendFile)
 
@@ -16,7 +15,7 @@ const port = process.env.PORT || 3000
 const app = express()
 app.use(express.json());
 
-app.use(express.static(path.resolve(__dirname , "./public")))
+app.use(express.static(path.resolve("./public")))
 
 // adds a unique id for the request
 app.use((req, res, next) => {
@@ -41,7 +40,8 @@ app.post("/stream-url", async (req, res) => {
         })
     }
 
-    const fileName = `${filesDirectoryPath}/${req.uniqueId}.m3u`
+    // const fileName = `${filesDirectoryPath}/${req.uniqueId}.m3u`
+    const fileName = path.resolve("./public/files", req.uniqueId) + ".m3u"
     const result = {
         url,
         fileId: req.uniqueId,
@@ -73,7 +73,8 @@ app.get("/stream-file/:fileId", (req, res, next) => {
         return res.status(400).send("fileId is missing")
     }
 
-    const fileName = `${filesDirectoryPath}/${req.params.fileId}.m3u`
+    // const fileName = `${filesDirectoryPath}/${req.params.fileId}.m3u`
+    const fileName = path.resolve("./public/files", req.params.fileId) + ".m3u"
     console.log(fileName);
     res.sendFile(fileName, (err) => {
         if(err) {
@@ -88,11 +89,13 @@ app.get("/stream-file/:fileId", (req, res, next) => {
 })
 
 //removing all files on app start
+const filesDirectoryPath = path.resolve("public/files")
 fs.readdir(filesDirectoryPath, (err, files) => {
     const removeFile = promisify(fs.unlink)
     if (err) {
         return console.log(err);
     }
+    // console.log(files);
 
     const removedFiles = files.map(file => removeFile(path.resolve(filesDirectoryPath, file)))
     removedFiles.forEach(async file => {
