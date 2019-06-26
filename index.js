@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000
 const app = express()
 app.use(express.json());
 
-app.use(express.static(path.resolve(__dirname + "./public")))
+app.use(express.static(path.resolve(__dirname , "./public")))
 
 // adds a unique id for the request
 app.use((req, res, next) => {
