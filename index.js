@@ -61,6 +61,14 @@ app.post("/stream-url", async (req, res) => {
             // #EXTM3U
             // #EXTINF: -1, Video title
 
+            setTimeout((fileName) => {
+                fs.unlink(fileName, (err) => {
+                    if (!err) {
+                        console.log("file removed:", fileName);
+                    }
+                })
+            }, 60 * 60 * 1000, fileName)
+
             res.json(result)
         })
     } catch (error) {
@@ -82,10 +90,6 @@ app.get("/stream-file/:fileId", (req, res, next) => {
             return res.status(400).send("No such file exists")
         }
     })
-
-    setTimeout((fileName) => {
-        fs.unlink(fileName)
-    }, 60*60*1000, fileName)
 })
 
 //removing all files on app start
