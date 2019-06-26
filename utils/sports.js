@@ -52,26 +52,32 @@ async function getMatchPageUrl(keyword) {
 //      2. go to the broadcast link, and finds the stream url
 async function launchBrowser(url) {
     console.log("url", url);
-    const browser = await puppeteer.launch({
-        headless: true,
-        ignoreHTTPSErrors: true,
-        timeout: 0,
-        args: [
-            //these are importand flags
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-web-security',
-            '--allow-running-insecure-content'
-        ]
-    })
+    let browser, page;
+    try {
+        browser = await puppeteer.launch({
+            headless: true,
+            ignoreHTTPSErrors: true,
+            timeout: 0,
+            args: [
+                //these are importand flags
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-web-security',
+                '--allow-running-insecure-content'
+            ]
+        })
 
-    let page = await browser.newPage()
-    page.setDefaultTimeout(0)
+        page = await browser.newPage()
+        page.setDefaultTimeout(0)
+    
+        await page.goto(url)
+        console.log("url opened");
+        await page.waitFor(".content")
+        console.log("url content found");
+    } catch (error) {
+        console.log("error with puppeteer", error);
+    }
 
-    await page.goto(url)
-    console.log("url opened");
-    await page.waitFor(".content")
-    console.log("url content found");
 
     //getting the link of page where the sports is streaming
     const { error, link } = await page.evaluate(() => {
