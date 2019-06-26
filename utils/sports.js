@@ -56,7 +56,13 @@ async function launchBrowser(url) {
         headless: true,
         ignoreHTTPSErrors: true,
         timeout: 0,
-        args: ['--disable-web-security', '--allow-running-insecure-content']//these are importand flags
+        args: [
+            //these are importand flags
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-web-security',
+            '--allow-running-insecure-content'
+        ]
     })
 
     let page = await browser.newPage()
