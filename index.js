@@ -67,7 +67,8 @@ app.post("/stream-url", async (req, res) => {
                         console.log("file removed:", fileName);
                     }
                 })
-            }, 60 * 60 * 1000, fileName)
+            }, 30000, fileName)
+            // }, 30000 || 60 * 60 * 1000, fileName)
 
             res.json(result)
         })
