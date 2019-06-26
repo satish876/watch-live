@@ -8,6 +8,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
     const input = document.getElementById("keyword")
     const streamUrl = document.getElementById("stream-url")
     const spinner = document.getElementById("spinner")
+    const downloadButton = document.getElementById("download-button")
 
     downloadInstructions.style.display = "none"
     let requestInProgress = false;
@@ -51,6 +52,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     searchtips.style.display = "none"
                     downloadInstructions.style.display = "flex"
                     streamUrl.value = result.url
+                    downloadButton.href = "stream-file/" + result.fileId
                 })
                 .catch(error => {
                     requestInProgress = false
