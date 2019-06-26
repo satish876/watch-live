@@ -63,7 +63,9 @@ async function launchBrowser(url) {
     page.setDefaultTimeout(0)
 
     await page.goto(url)
+    console.log("url opened");
     await page.waitFor(".content")
+    console.log("url content found");
 
     //getting the link of page where the sports is streaming
     const { error, link } = await page.evaluate(() => {
@@ -85,7 +87,7 @@ async function launchBrowser(url) {
             return { error: "something went wrong" }
         }
     })
-
+    console.log("error finding link", error);
     console.log("link", link);
 
     await page.close()
@@ -102,7 +104,7 @@ async function launchBrowser(url) {
     page.setDefaultTimeout(0)
 
     await page.goto(link)
-
+    console.log("link opened");
     await page.evaluate(() => {
         const elem = document.createElement("iframe")
         elem.setAttribute("id", "mytarget")
