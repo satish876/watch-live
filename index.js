@@ -6,7 +6,7 @@ const express = require("express")
 const yargs = require("yargs")
 const _ = require("lodash")
 
-const filesDirectoryPath = path.resolve(__dirname, "public/files")
+const filesDirectoryPath = path.resolve(__dirname, "./public/files")
 
 const fileAppendAsync = promisify(fs.appendFile)
 
@@ -16,7 +16,7 @@ const port = process.env.PORT || 3000
 const app = express()
 app.use(express.json());
 
-app.use(express.static(__dirname + "/public"))
+app.use(express.static(path.resolve(__dirname + "./public")))
 
 // adds a unique id for the request
 app.use((req, res, next) => {
@@ -83,7 +83,7 @@ app.get("/stream-file/:fileId", (req, res, next) => {
     })
 
     setTimeout((fileName) => {
-        fs.unlink(path.resolve(__dirname, "public", "live.m3u1"))
+        fs.unlink(fileName)
     }, 60*60*1000, fileName)
 })
 

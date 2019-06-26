@@ -1,6 +1,5 @@
 const { promisify } = require("util")
 const _ = require("lodash")
-
 const request = promisify(require("request"))
 const puppeteer = require("puppeteer")
 
