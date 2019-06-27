@@ -5,6 +5,7 @@ const puppeteer = require("puppeteer")
 
 const baseUrl = "https://www.jokerlivestream.com/"
 const searchUrl = "https://www.jokerlivestream.com/search.php?option=com_search&tmpl=raw&type=json&ordering=&searchphrase=all&Itemid=207&areas[]=event&sef=1&limitstart=0&"
+const block_ressources = ['image', 'stylesheet', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
 
 const getMatchUrl = async ({ keyword }) => {
     try {
@@ -54,7 +55,7 @@ async function launchBrowser(url) {
     let browser, page;
     try {
         browser = await puppeteer.launch({
-            headless: !true,
+            headless: true,
             ignoreHTTPSErrors: true,
             timeout: 0,
             args: [
@@ -67,15 +68,22 @@ async function launchBrowser(url) {
         })
 
         page = await browser.newPage()
+        await page.setExtraHTTPHeaders({
+            'Accept-Language': "en-US,en;q=0.9,hi;q=0.8"
+        });
+        await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
         await page.setRequestInterception(true);
         page.on('request', request => {
-            if (request.isNavigationRequest() && request.redirectChain().length)
+            if ((request.isNavigationRequest() && request.redirectChain().length) ||
+                block_ressources.indexOf(request.resourceType) > 0) {
                 request.abort();
-            else
+            }
+            else {
                 request.continue();
+            }
         });
         page.setDefaultTimeout(0)
-    
+
         await page.goto(url)
         console.log("url opened");
         await page.waitFor(".content")
@@ -119,6 +127,11 @@ async function launchBrowser(url) {
 
 
     page = await browser.newPage()
+    await page.setExtraHTTPHeaders({
+        'Accept-Language': "en-US,en;q=0.9,hi;q=0.8"
+    });
+    await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
+
     page.setDefaultTimeout(0)
     await page.setRequestInterception(true);
     page.on('request', request => {
@@ -128,28 +141,51 @@ async function launchBrowser(url) {
             request.continue();
     });
 
+    let eventName, eventIframeUrl;
+    const parseHtml = (string, text) => {
+        let firstOccurance = string.indexOf(text) + 5
+        return string.substr(firstOccurance, string.substr(firstOccurance).indexOf("\""))
+    }
+    {
+
+        let { body } = await request(link)
+        const scriptTag = body.split("banner-3")[1].substr(0, 200)
+        eventName = parseHtml(scriptTag, "fid=\"")
+        eventIframeUrl = parseHtml(scriptTag, "src=\"")
+    }
+
+    console.log(eventName, eventIframeUrl)
+    let { body } = await request(eventIframeUrl)
+    const iframeSrc = parseHtml(body, "src=\"").split("?")[0]
+    console.log("iframeSrc", iframeSrc);
     await page.goto(link)
-    await page.waitForSelector(".banner-3 iframe")
-    // await page.waitFor(30000)
-    console.log("link opened");
-    await page.evaluate(() => {
-        let iframeSrc = document.querySelector(".banner-3 iframe").src
+
+    console.log("link opened", `${iframeSrc}?u=${eventName}`.replace("http:", "https:"));
+    await page.evaluate((src, name) => {
         const elem = document.createElement("iframe")
         elem.setAttribute("id", "mytarget")
 
         elem.onload = function () {
             target = this.contentWindow.document.body
+
+            console.log(this.contentWindow.document.body);
             target.querySelectorAll("script").forEach((i, key) => {
                 if (i.innerText.indexOf("Clappr") > -1) {
                     document.body.link = i.innerText
                 }
             })
+
+            if (!document.body.link) {
+                target.querySelectorAll("iframe").forEach(i => {
+                    elem.onload.call(i)
+                })
+            }
         };
 
         elem.async = false
-        elem.setAttribute("src", iframeSrc.replace("http:", "https:"))
+        elem.setAttribute("src", `${src}?u=${name}`.replace("http:", "https:"))
         document.body.append(elem)
-    })
+    }, iframeSrc, eventName)
 
     await page.waitForSelector('body[link]', { timeout: 0 })
 
