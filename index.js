@@ -76,4 +76,3 @@ yargs.parse()
 const server = app.listen(port, () => {
     console.log("Server is up at", port);
 })
-}
