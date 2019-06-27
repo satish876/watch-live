@@ -54,7 +54,7 @@ async function launchBrowser(url) {
     let browser, page;
     try {
         browser = await puppeteer.launch({
-            headless: true,
+            headless: !true,
             ignoreHTTPSErrors: true,
             timeout: 0,
             args: [
@@ -130,6 +130,7 @@ async function launchBrowser(url) {
 
     await page.goto(link)
     await page.waitForSelector(".banner-3 iframe")
+    // await page.waitFor(30000)
     console.log("link opened");
     await page.evaluate(() => {
         let iframeSrc = document.querySelector(".banner-3 iframe").src
