@@ -67,6 +67,13 @@ async function launchBrowser(url) {
         })
 
         page = await browser.newPage()
+        await page.setRequestInterception(true);
+        page.on('request', request => {
+            if (request.isNavigationRequest() && request.redirectChain().length)
+                request.abort();
+            else
+                request.continue();
+        });
         page.setDefaultTimeout(0)
     
         await page.goto(url)
@@ -113,10 +120,19 @@ async function launchBrowser(url) {
 
     page = await browser.newPage()
     page.setDefaultTimeout(0)
+    await page.setRequestInterception(true);
+    page.on('request', request => {
+        if (request.isNavigationRequest() && request.redirectChain().length)
+            request.abort();
+        else
+            request.continue();
+    });
 
     await page.goto(link)
+    await page.waitForSelector(".banner-3 iframe")
     console.log("link opened");
     await page.evaluate(() => {
+        let iframeSrc = document.querySelector(".banner-3 iframe").src
         const elem = document.createElement("iframe")
         elem.setAttribute("id", "mytarget")
 
@@ -130,14 +146,13 @@ async function launchBrowser(url) {
         };
 
         elem.async = false
-        elem.setAttribute("src", "https://player.jokehd.com/one.php?u=skymaineventsd43")
+        elem.setAttribute("src", iframeSrc.replace("http:", "https:"))
         document.body.append(elem)
     })
 
     await page.waitForSelector('body[link]', { timeout: 0 })
 
     const clappr = await page.evaluate(() => document.body.link)
-
     await page.close()
     await browser.close()
 

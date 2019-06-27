@@ -8,6 +8,7 @@
     <title>Watch Live</title>
     <link rel="shortcut icon" type="image/x-icon" href="assets/cricket.png" />
     <link rel="stylesheet" href="./assets/styles.css">
+    <script async src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
     <script src="./js/index.js"></script>
 </head>
 
@@ -22,8 +23,9 @@
             <h2>How to stream?</h2>
             <div class="flex flex-column instructions">
                 <h4>1. Download this file and play with VLC media player. <a target="#" href="https://www.videolan.org/vlc/">(Get VLC)</a></h4>
-                <a id="download-button" href="" download target="blank">Download File</a>
-                <small>Download link expires in 1 hour</small>
+                <form id="form">
+                    <button class="btn btn-sm btn-success" type="submit" role="button">Download</button>
+                </form>
             </div>
             <div class="flex flex-column instructions">
                 <h3>OR</h3>

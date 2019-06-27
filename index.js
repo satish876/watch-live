@@ -5,10 +5,6 @@ const { exec } = require('child_process');
 const express = require("express")
 const yargs = require("yargs")
 const _ = require("lodash")
-
-
-const fileAppendAsync = promisify(fs.appendFile)
-
 const { getMatchUrl } = require("./utils/sports")
 const port = process.env.PORT || 3000
 
@@ -16,12 +12,6 @@ const app = express()
 app.use(express.json());
 
 app.use(express.static(path.resolve("./public")))
-
-// adds a unique id for the request
-app.use((req, res, next) => {
-    req.uniqueId = (+new Date()) + _.uniqueId()
-    next()
-})
 
 app.post("/stream-url", async (req, res) => {
     const { keyword } = req.body
@@ -35,77 +25,16 @@ app.post("/stream-url", async (req, res) => {
     const { error, url } = await getMatchUrl({ keyword })
 
     if (error) {
-        return res.status(500).send({
-            error: error || "something went wrong, try again"
-        })
-    }
-
-    // const fileName = `${filesDirectoryPath}/${req.uniqueId}.m3u`
-    const fileName = path.resolve("./public/files", req.uniqueId) + ".m3u"
-    const result = {
-        url,
-        fileId: req.uniqueId,
-    }
-
-    try {
-        fs.open(fileName, "w", async (err, file) => {
-            if (err) {
-                console.log(err);
-                delete result.fileUrl
-                res.json(result)
-            }
-
-            await fileAppendAsync(file, "#EXTM3U\n")
-            await fileAppendAsync(file, "#EXTINF: -1," + keyword + "\n")
-            await fileAppendAsync(file, url)
-            // #EXTM3U
-            // #EXTINF: -1, Video title
-
-            setTimeout((fileName) => {
-                fs.unlink(fileName, (err) => {
-                    if (!err) {
-                        console.log("file removed:", fileName);
-                    }
-                })
-            }, 30000, fileName)
-            // }, 30000 || 60 * 60 * 1000, fileName)
-
-            res.json(result)
-        })
-    } catch (error) {
         console.log(error);
-    }
-})
-
-app.get("/stream-file/:fileId", (req, res, next) => {
-    if(!req.params.fileId) {
-        return res.status(400).send("fileId is missing")
+        return res.status(500).json({
+            error: error.toString() || "something went wrong, try again"
+        })
     }
 
-    // const fileName = `${filesDirectoryPath}/${req.params.fileId}.m3u`
-    const fileName = path.resolve("./public/files", req.params.fileId) + ".m3u"
-    console.log(fileName);
-    res.sendFile(fileName, (err) => {
-        if(err) {
-            console.log(err);
-            return res.status(400).send("No such file exists")
-        }
-    })
-})
-
-//removing all files on app start
-const filesDirectoryPath = path.resolve("public/files")
-fs.readdir(filesDirectoryPath, (err, files) => {
-    const removeFile = promisify(fs.unlink)
-    if (err) {
-        return console.log(err);
+    const result = {
+        url
     }
-    // console.log(files);
-
-    const removedFiles = files.map(file => removeFile(path.resolve(filesDirectoryPath, file)))
-    removedFiles.forEach(async file => {
-        await file
-    });
+    res.json(result)
 })
 
 //command to run in terminal
@@ -132,13 +61,12 @@ yargs.command({
 
         console.log("Hold tight!");
         console.log(url);
-        
+
         exec(`vlc ${url}`, (err, stdout, stderr) => {
             if (err) {
                 server.close()
                 return console.error(err);
             }
-            console.log(stdout);
         });
     }
 })
@@ -148,3 +76,4 @@ yargs.parse()
 const server = app.listen(port, () => {
     console.log("Server is up at", port);
 })
+}
