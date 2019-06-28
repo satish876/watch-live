@@ -31,10 +31,10 @@ async function getMatchPageUrl(keyword) {
     try {
         let { error, body } = await request(`${searchUrl}&searchword=${keyword}`)
 
-        if (error) throw new Error(error)
+        if (error) throw new Error()
 
         body = JSON.parse(body)
-        if (body.results.length === 0) throw new Error("no results")
+        if (body.results.length === 0) throw new Error()
 
         return {
             matchPageUrl: body.results[0].url
@@ -54,6 +54,29 @@ async function launchBrowser(url) {
     console.log("url", url);
     let browser, page;
     try {
+        const setPageConfig = async (page) => {
+            //these are added to access the target host in headless mode
+            await page.setExtraHTTPHeaders({
+                'Accept-Language': "en-US,en;q=0.9,hi;q=0.8"
+            });
+            await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
+
+            await page.setRequestInterception(true);
+
+            //this is to block navigation and irrelevant contents 
+            page.on('request', request => {
+                if ((request.isNavigationRequest() && request.redirectChain().length) ||
+                    block_ressources.indexOf(request.resourceType()) > -1) {
+                    request.abort();
+                }
+                else {
+                    request.continue();
+                }
+            });
+
+            await page.setDefaultTimeout(0)
+        }
+
         browser = await puppeteer.launch({
             headless: true,
             ignoreHTTPSErrors: true,
@@ -68,26 +91,11 @@ async function launchBrowser(url) {
         })
 
         page = await browser.newPage()
-        await page.setExtraHTTPHeaders({
-            'Accept-Language': "en-US,en;q=0.9,hi;q=0.8"
-        });
-        await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-            if ((request.isNavigationRequest() && request.redirectChain().length) ||
-                block_ressources.indexOf(request.resourceType()) > -1) {
-                request.abort();
-            }
-            else {
-                request.continue();
-            }
-        });
-        page.setDefaultTimeout(0)
+        await setPageConfig(page)
 
         await page.goto(url)
         console.log("url opened");
         await page.waitFor(".content")
-        console.log("url content found");
     } catch (error) {
         console.log("error with puppeteer", error);
     }
@@ -113,12 +121,13 @@ async function launchBrowser(url) {
             return { error: "something went wrong" }
         }
     })
-    console.log("error finding link", error);
+
     console.log("link", link);
 
     await page.close()
 
     if (error) {
+        console.log("error finding link", error);
         await browser.close()
         return {
             error: "Please try while match is live, no links available yet"
@@ -127,28 +136,14 @@ async function launchBrowser(url) {
 
 
     page = await browser.newPage()
-    await page.setExtraHTTPHeaders({
-        'Accept-Language': "en-US,en;q=0.9,hi;q=0.8"
-    });
-    await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36")
-
-    page.setDefaultTimeout(0)
-    await page.setRequestInterception(true);
-    page.on('request', request => {
-        if ((request.isNavigationRequest() && request.redirectChain().length) ||
-            block_ressources.indexOf(request.resourceType()) > -1) {
-            request.abort();
-        }
-        else {
-            request.continue();
-        }
-    });
+    await setPageConfig(page)
 
     let eventName, eventIframeUrl;
     const parseHtml = (string, text) => {
         let firstOccurance = string.indexOf(text) + 5
         return string.substr(firstOccurance, string.substr(firstOccurance).indexOf("\""))
     }
+
     {
 
         let { body } = await request(link)
@@ -160,7 +155,9 @@ async function launchBrowser(url) {
     console.log(eventName, eventIframeUrl)
     let { body } = await request(eventIframeUrl)
     const iframeSrc = parseHtml(body, "src=\"").split("?")[0]
+
     console.log("iframeSrc", iframeSrc);
+
     await page.goto(link)
 
     console.log("link opened", `${iframeSrc}?u=${eventName}`.replace("http:", "https:"));
