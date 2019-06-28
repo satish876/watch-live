@@ -5,7 +5,7 @@ const puppeteer = require("puppeteer")
 
 const baseUrl = "https://www.jokerlivestream.com/"
 const searchUrl = "https://www.jokerlivestream.com/search.php?option=com_search&tmpl=raw&type=json&ordering=&searchphrase=all&Itemid=207&areas[]=event&sef=1&limitstart=0&"
-const block_ressources = ['image', 'stylesheet', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
+const block_ressources = ['script', 'image', 'stylesheet', 'media', 'font', 'texttrack', 'object', 'beacon', 'csp_report', 'imageset'];
 
 const getMatchUrl = async ({ keyword }) => {
     try {
@@ -75,7 +75,7 @@ async function launchBrowser(url) {
         await page.setRequestInterception(true);
         page.on('request', request => {
             if ((request.isNavigationRequest() && request.redirectChain().length) ||
-                block_ressources.indexOf(request.resourceType) > 0) {
+                block_ressources.indexOf(request.resourceType()) > -1) {
                 request.abort();
             }
             else {
@@ -135,10 +135,13 @@ async function launchBrowser(url) {
     page.setDefaultTimeout(0)
     await page.setRequestInterception(true);
     page.on('request', request => {
-        if (request.isNavigationRequest() && request.redirectChain().length)
+        if ((request.isNavigationRequest() && request.redirectChain().length) ||
+            block_ressources.indexOf(request.resourceType()) > -1) {
             request.abort();
-        else
+        }
+        else {
             request.continue();
+        }
     });
 
     let eventName, eventIframeUrl;
